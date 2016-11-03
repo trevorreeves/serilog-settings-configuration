@@ -24,6 +24,7 @@ namespace Sample
             do
             {
                 logger.ForContext<Program>().Information("Hello, world!");
+                logger.ForContext<Program>().Error("Hello, world!");
                 logger.ForContext(Constants.SourceContextPropertyName, "Microsoft").Warning("Hello, world!");
                 logger.ForContext(Constants.SourceContextPropertyName, "MyApp.Something.Tricky").Verbose("Hello, world!");
 

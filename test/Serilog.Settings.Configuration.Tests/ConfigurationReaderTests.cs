@@ -65,6 +65,13 @@ namespace Serilog.Settings.Configuration.Tests
             var methodInfo = ConfigurationReader.GetMethodCalls(optionsConfig.GetSection("Serilog:WriteTo"));
 
             Assert.Equal(2, methodInfo.Count());
+            Assert.Equal("LiterateConsole", methodInfo[0].Name);
+            Assert.Equal(1, methodInfo[0].Arguments.Count);
+            Assert.Equal("Information", methodInfo[0].Arguments["restrictedToMinimumLevel"]);
+
+            Assert.Equal("LiterateConsole", methodInfo[1].Name);
+            Assert.Equal(1, methodInfo[1].Arguments.Count);
+            Assert.Equal("Error", methodInfo[1].Arguments["restrictedToMinimumLevel"]);
         }
     }
 }

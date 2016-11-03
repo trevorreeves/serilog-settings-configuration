@@ -67,15 +67,15 @@ namespace Serilog.Settings.Configuration
             }
         }
 
-        internal static Dictionary<string, Dictionary<string, string>> GetMethodCalls(IConfigurationSection directive)
+        internal static List<ConfigMethodInfo> GetMethodCalls(IConfigurationSection directive)
         {
-            var result = new Dictionary<string, Dictionary<string, string>>();
+            var result = new List<ConfigMethodInfo>();
             foreach (var child in directive.GetChildren())
             {
                 if (child.Value != null)
                 {
                     // Plain string
-                    result.Add(child.Value, new Dictionary<string, string>());
+                    result.Add(new ConfigMethodInfo(child.Value));
                 }
                 else
                 {
@@ -83,16 +83,16 @@ namespace Serilog.Settings.Configuration
                     if (name.Value == null)
                         throw new InvalidOperationException($"The configuration value in {name.Path} has no Name element.");
 
-                    var callArgs = new Dictionary<string, string>();
+                    var methodInfo = new ConfigMethodInfo(name.Value);
                     var args = child.GetSection("Args");
                     if (args != null)
                     {
                         foreach (var argument in args.GetChildren())
                         {
-                            callArgs.Add(argument.Key, Environment.ExpandEnvironmentVariables(argument.Value));
+                            methodInfo.Arguments.Add(argument.Key, Environment.ExpandEnvironmentVariables(argument.Value));
                         }
                     }
-                    result.Add(name.Value, callArgs);
+                    result.Add(methodInfo);
                 }
             }
             return result;
@@ -187,16 +187,16 @@ namespace Serilog.Settings.Configuration
             return query.ToArray();
         }
 
-        static void CallConfigurationMethods(Dictionary<string, Dictionary<string, string>> methods, IList<MethodInfo> configurationMethods, object receiver)
+        static void CallConfigurationMethods(List<ConfigMethodInfo> methods, IList<MethodInfo> configurationMethods, object receiver)
         {
             foreach (var method in methods)
             {
-                var methodInfo = SelectConfigurationMethod(configurationMethods, method.Key, method.Value);
+                var methodInfo = SelectConfigurationMethod(configurationMethods, method.Name, method.Arguments);
 
                 if (methodInfo != null)
                 {
                     var call = (from p in methodInfo.GetParameters().Skip(1)
-                                let directive = method.Value.FirstOrDefault(s => s.Key == p.Name)
+                                let directive = method.Arguments.FirstOrDefault(s => s.Key == p.Name)
                                 select directive.Key == null ? p.DefaultValue : ConvertToType(directive.Value, p.ParameterType)).ToList();
 
                     call.Insert(0, receiver);
@@ -302,6 +302,18 @@ namespace Serilog.Settings.Configuration
                 .Where(m => m.IsStatic && m.IsPublic && m.IsDefined(typeof(ExtensionAttribute), false))
                 .Where(m => m.GetParameters()[0].ParameterType == configType)
                 .ToList();
+        }
+
+        internal class ConfigMethodInfo
+        {
+            public ConfigMethodInfo(string name)
+            {
+                Name = name;
+            }
+
+            public string Name { get; }
+
+            public Dictionary<string, string> Arguments { get; } = new Dictionary<string, string>();
         }
     }
 }
