@@ -67,7 +67,7 @@ namespace Serilog.Settings.Configuration
             }
         }
 
-        Dictionary<string, Dictionary<string, string>> GetMethodCalls(IConfigurationSection directive)
+        internal static Dictionary<string, Dictionary<string, string>> GetMethodCalls(IConfigurationSection directive)
         {
             var result = new Dictionary<string, Dictionary<string, string>>();
             foreach (var child in directive.GetChildren())
