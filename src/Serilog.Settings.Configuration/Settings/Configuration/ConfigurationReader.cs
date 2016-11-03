@@ -80,7 +80,7 @@ namespace Serilog.Settings.Configuration
                 else
                 {
                     var name = child.GetSection("Name");
-                    if (name.Value == null)
+                    if (string.IsNullOrWhiteSpace(name.Value))
                         throw new InvalidOperationException($"The configuration value in {name.Path} has no Name element.");
 
                     var methodInfo = new ConfigMethodInfo(name.Value);
